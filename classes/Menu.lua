@@ -5,6 +5,20 @@
 local ipairs = ipairs
 local math_sin = math.sin
 
+local helpText = {
+    "Guess the word before the hangman is complete!",
+    "Press letter keys to guess.",
+    "",
+    "Power-ups available in-game:",
+    "• Vowel Revealer (2 coins) - Reveals a random vowel",
+    "• Second Chance (3 coins) - Removes one wrong guess",
+    "• Letter Eliminator (4 coins) - Removes 3 wrong letters",
+    "",
+    "Earn coins by guessing letters correctly and winning games!",
+    "",
+    "Click anywhere to close"
+}
+
 local Menu = {}
 Menu.__index = Menu
 
@@ -25,6 +39,7 @@ function Menu.new()
         rotation = 0,
         rotationSpeed = 0.2
     }
+    instance.showHelp = false
 
     instance.smallFont = love.graphics.newFont(16)
     instance.mediumFont = love.graphics.newFont(22)
@@ -71,6 +86,17 @@ function Menu:createMenuButtons()
             y = 0
         }
     }
+
+    -- Help button (question mark)
+    self.helpButton = {
+        text = "?",
+        action = "help",
+        width = 40,
+        height = 40,
+        x = 30,
+        y = self.screenHeight - 50
+    }
+
     self:updateButtonPositions()
 end
 
@@ -163,6 +189,9 @@ function Menu:updateButtonPositions()
         button.x = (self.screenWidth - button.width) / 2
         button.y = startY + (i - 1) * 60
     end
+
+    -- Update help button position
+    self.helpButton.y = self.screenHeight - 50
 end
 
 function Menu:updateOptionsButtonPositions()
@@ -237,12 +266,19 @@ function Menu:draw(screenWidth, screenHeight, state)
     love.graphics.pop()
 
     if state == "menu" then
-        self:drawMenuButtons()
-        -- Draw instructions
-        love.graphics.setColor(0.9, 0.9, 0.9)
-        love.graphics.setFont(self.smallFont)
-        love.graphics.printf("Guess the word before the hangman is complete!\nPress letter keys to guess.",
-            0, screenHeight / 4 + 50, screenWidth, "center")
+        if self.showHelp then
+            self:drawHelpOverlay(screenWidth, screenHeight)
+        else
+            self:drawMenuButtons()
+            -- Draw instructions
+            love.graphics.setColor(0.9, 0.9, 0.9)
+            love.graphics.setFont(self.smallFont)
+            love.graphics.printf("Guess the word before the hangman is complete!\nPress letter keys to guess.",
+                0, screenHeight / 4 + 50, screenWidth, "center")
+
+            -- Draw help button
+            self:drawHelpButton()
+        end
     elseif state == "options" then
         self:drawOptionsInterface()
     end
@@ -251,6 +287,68 @@ function Menu:draw(screenWidth, screenHeight, state)
     love.graphics.setColor(1, 1, 1, 0.5)
     love.graphics.setFont(self.smallFont)
     love.graphics.printf("© 2025 Jericho Crosby – Hangman", 10, screenHeight - 25, screenWidth - 20, "right")
+end
+
+function Menu:drawHelpButton()
+    local button = self.helpButton
+
+    -- Button background
+    love.graphics.setColor(0.3, 0.5, 0.8, 0.8)
+    love.graphics.circle("fill", button.x + button.width / 2, button.y + button.height / 2, button.width / 2)
+
+    -- Button border
+    love.graphics.setColor(0.6, 0.7, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.circle("line", button.x + button.width / 2, button.y + button.height / 2, button.width / 2)
+
+    -- Question mark
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(self.mediumFont)
+    local textWidth = self.mediumFont:getWidth(button.text)
+    local textHeight = self.mediumFont:getHeight()
+    love.graphics.print(button.text,
+        button.x + (button.width - textWidth) / 2,
+        button.y + (button.height - textHeight) / 2)
+
+    love.graphics.setLineWidth(1)
+end
+
+function Menu:drawHelpOverlay(screenWidth, screenHeight)
+    -- Semi-transparent overlay
+    love.graphics.setColor(0, 0, 0, 0.85)
+    love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
+
+    -- Help box
+    local boxWidth = 600
+    local boxHeight = 400
+    local boxX = (screenWidth - boxWidth) / 2
+    local boxY = (screenHeight - boxHeight) / 2
+
+    -- Box background
+    love.graphics.setColor(0.1, 0.1, 0.2, 0.95)
+    love.graphics.rectangle("fill", boxX, boxY, boxWidth, boxHeight, 10)
+
+    -- Box border
+    love.graphics.setColor(0.3, 0.5, 0.8)
+    love.graphics.setLineWidth(3)
+    love.graphics.rectangle("line", boxX, boxY, boxWidth, boxHeight, 10)
+
+    -- Title
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(self.largeFont)
+    love.graphics.printf("How to Play", boxX, boxY + 20, boxWidth, "center")
+
+    -- Help text
+    love.graphics.setColor(0.9, 0.9, 0.9)
+    love.graphics.setFont(self.smallFont)
+
+    local lineHeight = 22
+    for i, line in ipairs(helpText) do
+        local y = boxY + 80 + (i - 1) * lineHeight
+        love.graphics.printf(line, boxX + 30, y, boxWidth - 60, "left")
+    end
+
+    love.graphics.setLineWidth(1)
 end
 
 function Menu:drawOptionsInterface()
@@ -323,6 +421,21 @@ function Menu:handleClick(x, y, state)
         if x >= button.x and x <= button.x + button.width and
             y >= button.y and y <= button.y + button.height then
             return button.action
+        end
+    end
+
+    -- Check help button in menu state
+    if state == "menu" then
+        if self.helpButton and x >= self.helpButton.x and x <= self.helpButton.x + self.helpButton.width and
+            y >= self.helpButton.y and y <= self.helpButton.y + self.helpButton.height then
+            self.showHelp = true
+            return "help"
+        end
+
+        -- If help is showing, any click closes it
+        if self.showHelp then
+            self.showHelp = false
+            return "help_close"
         end
     end
 
