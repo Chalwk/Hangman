@@ -2,9 +2,9 @@
 -- License: MIT
 -- Copyright (c) 2025 Jericho Crosby (Chalwk)
 
-local Game = require("classes/Game")
-local Menu = require("classes/Menu")
-local BackgroundManager = require("classes/BackgroundManager")
+local Game = require("classes.Game")
+local Menu = require("classes.Menu")
+local BackgroundManager = require("classes.BackgroundManager")
 
 local game, menu, backgroundManager
 local screenWidth, screenHeight

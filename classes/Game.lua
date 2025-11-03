@@ -13,7 +13,8 @@ local string_char = string.char
 local string_rep = string.rep
 local lg = love.graphics
 
-local WordBank = require("classes/WordBank")
+local WordBank = require("classes.WordBank")
+local SoundManager = require("classes.SoundManager")
 
 local Game = {}
 Game.__index = Game
@@ -23,22 +24,26 @@ function Game.new()
 
     instance.screenWidth = 800
     instance.screenHeight = 600
+    instance.gameOver = false
+    instance.won = false
+    instance.difficulty = "medium"
+    instance.category = "general"
     instance.wordBank = WordBank.new()
     instance.currentWord = ""
     instance.displayWord = ""
     instance.guessedLetters = {}
     instance.wrongGuesses = 0
     instance.maxWrongGuesses = 6
-    instance.gameOver = false
-    instance.won = false
-    instance.difficulty = "medium"
-    instance.category = "general"
-    instance.animations = {}
     instance.hintAvailable = true
     instance.revealTimer = 0
     instance.revealLetter = nil
+    instance.animations = {}
+    instance.powerUpParticles = {}
     instance.screenShake = { intensity = 0, duration = 0, timer = 0, active = false }
+    instance.buttonHover = nil
     instance.time = 0
+    instance.coins = 0
+
 
     -- Power-ups System
     instance.powerUps = {
@@ -67,9 +72,9 @@ function Game.new()
             color = { 0.8, 0.3, 0.8 }
         }
     }
-    instance.coins = 0
-    instance.powerUpParticles = {}
-    instance.buttonHover = nil
+
+    local soundManager = SoundManager.new()
+    instance.sounds = soundManager
 
     return instance
 end
@@ -412,7 +417,7 @@ local function drawWord(self)
     -- Draw the word and store letter positions for particles
     self.letterPositions = {}
     for i = 1, #self.currentWord do
-        local letter = self.displayWord:sub((i-1)*2+1, (i-1)*2+1)
+        local letter = self.displayWord:sub((i - 1) * 2 + 1, (i - 1) * 2 + 1)
         local x = startX + (i - 1) * letterSpacing
         self.letterPositions[i] = x -- Store position for particles
         lg.print(letter, x - font:getWidth(letter) / 2, wordY - 18)
@@ -655,11 +660,14 @@ function Game:guessLetter(letter)
             -- Award bonus coins for winning
             local bonusCoins = math_max(1, 5 - self.wrongGuesses)
             self.coins = self.coins + bonusCoins
+
+            self.sounds:play("win")
         end
     else
         -- Wrong guess
         self.wrongGuesses = self.wrongGuesses + 1
         triggerScreenShake(self)
+        self.sounds:play("wrong")
 
         -- Create particle effect for wrong guess at hangman position
         local headCenterX = self.screenWidth / 2 + 100
@@ -709,9 +717,7 @@ function Game:startNewGame(difficulty, category)
 end
 
 function Game:handleClick(x, y)
-    if self.gameOver then
-        return
-    end
+    if self.gameOver then return end
 
     -- Check reset button
     if x >= self.screenWidth - 140 and x <= self.screenWidth - 20 and
