@@ -2,9 +2,11 @@
 -- License: MIT
 -- Copyright (c) 2025 Jericho Crosby (Chalwk)
 
+local pairs = pairs
 local ipairs = ipairs
 local math_random = math.random
 local table_insert = table.insert
+local table_remove = table.remove
 local math_sin = math.sin
 local math_max = math.max
 local math_min = math.min
@@ -31,6 +33,7 @@ function Game.new()
     instance.wordBank = WordBank.new()
     instance.currentWord = ""
     instance.displayWord = ""
+    instance.vowels = { "A", "E", "I", "O", "U" }
     instance.guessedLetters = {}
     instance.wrongGuesses = 0
     instance.maxWrongGuesses = 6
@@ -122,10 +125,9 @@ local function createPowerUpParticles(self, x, y, color, count)
 end
 
 local function useRevealVowel(self)
-    local vowels = { "A", "E", "I", "O", "U" }
     local availableVowels = {}
 
-    for _, vowel in ipairs(vowels) do
+    for _, vowel in ipairs(self.vowels) do
         if not isLetterGuessed(self, vowel) and string_find(self.currentWord, vowel) then
             table_insert(availableVowels, vowel)
         end
@@ -196,7 +198,7 @@ local function useLetterEliminator(self)
     for i = 1, math_min(3, #wrongLetters) do
         if #wrongLetters > 0 then
             local randomIndex = math_random(#wrongLetters)
-            local letter = table.remove(wrongLetters, randomIndex)
+            local letter = table_remove(wrongLetters, randomIndex)
             table_insert(self.guessedLetters, letter)
 
             -- Create elimination particle effect
@@ -768,7 +770,7 @@ function Game:update(dt)
         particle.rotation = particle.rotation + particle.spin * dt
 
         if particle.life <= 0 then
-            table.remove(self.powerUpParticles, i)
+            table_remove(self.powerUpParticles, i)
         end
     end
 
@@ -781,7 +783,7 @@ function Game:update(dt)
             if anim.type == "hint" then
                 self:guessLetter(anim.letter)
             end
-            table.remove(self.animations, i)
+            table_remove(self.animations, i)
         end
     end
 
