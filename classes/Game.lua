@@ -660,9 +660,10 @@ function Game:guessLetter(letter)
             -- Award bonus coins for winning
             local bonusCoins = math_max(1, 5 - self.wrongGuesses)
             self.coins = self.coins + bonusCoins
-
             self.sounds:play("win")
+            return
         end
+        self.sounds:play("correct_guess")
     else
         -- Wrong guess
         self.wrongGuesses = self.wrongGuesses + 1

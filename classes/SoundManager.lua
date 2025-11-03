@@ -9,6 +9,7 @@ SoundManager.__index = SoundManager
 function SoundManager.new()
     local instance = setmetatable({
         sounds = {
+            correct_guess = love.audio.newSource("assets/sounds/correct_guess.mp3", "static"),
             win = love.audio.newSource("assets/sounds/win.mp3", "static"),
             wrong = love.audio.newSource("assets/sounds/wrong.mp3", "static"),
         }
@@ -16,6 +17,7 @@ function SoundManager.new()
 
     instance:setVolume(instance.sounds.win, 1)
     instance:setVolume(instance.sounds.wrong, 1)
+    instance:setVolume(instance.sounds.correct_guess, 1)
 
     --instance:play("background", true)
 
