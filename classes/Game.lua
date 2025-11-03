@@ -401,11 +401,22 @@ local function drawWord(self)
     lg.rectangle("fill", centerX - 200, wordY - 25, 400, 60, 10)
 
     lg.setColor(1, 1, 1)
-    lg.setFont(lg.newFont(36))
+    local font = lg.newFont(36)
+    lg.setFont(font)
 
-    -- Draw the word
-    local wordDisplay = self.displayWord:gsub("_", "_")
-    lg.printf(wordDisplay, 0, wordY, self.screenWidth, "center")
+    -- Calculate exact letter positions for particle effects
+    local letterSpacing = 36 -- This matches the font size
+    local wordWidth = #self.currentWord * letterSpacing
+    local startX = centerX - wordWidth / 2 + letterSpacing / 2
+
+    -- Draw the word and store letter positions for particles
+    self.letterPositions = {}
+    for i = 1, #self.currentWord do
+        local letter = self.displayWord:sub((i-1)*2+1, (i-1)*2+1)
+        local x = startX + (i - 1) * letterSpacing
+        self.letterPositions[i] = x -- Store position for particles
+        lg.print(letter, x - font:getWidth(letter) / 2, wordY - 18)
+    end
 
     -- Draw reveal animation if active
     if self.revealLetter then
@@ -413,7 +424,7 @@ local function drawWord(self)
         lg.setColor(1, 1, 0, alpha)
         lg.setFont(lg.newFont(20))
         lg.printf("Hint: Letter '" .. self.revealLetter .. "' is in the word!",
-            0, wordY - 35, self.screenWidth, "center")
+            0, wordY - 45, self.screenWidth, "center")
     end
 end
 
@@ -592,16 +603,14 @@ local function drawPowerUpParticles(self)
 end
 
 local function createWordRevealEffect(self)
-    local centerX = self.screenWidth / 2
     local wordY = self.screenHeight / 2 + 150
-    local wordWidth = #self.currentWord * 24
 
     for i = 1, #self.currentWord do
         local letter = self.currentWord:sub(i, i)
-        local x = centerX - wordWidth / 2 + (i - 0.5) * 48
-
-        -- Create burst of particles for each letter
-        createLetterParticles(self, letter, x, wordY, true)
+        local x = self.letterPositions[i]
+        if x then
+            createLetterParticles(self, letter, x, wordY - 5, true)
+        end
     end
 end
 
@@ -626,14 +635,15 @@ function Game:guessLetter(letter)
         -- Award coin for correct guess
         self.coins = self.coins + 1
 
-        -- Create particle effect for correct guess
-        local centerX = self.screenWidth / 2
+        -- Create particle effects for ALL occurrences of the letter
         local wordY = self.screenHeight / 2 + 150
-        local letterIndex = string_find(self.currentWord, letter)
-        if letterIndex then
-            local wordWidth = #self.currentWord * 20
-            local x = centerX - wordWidth / 2 + (letterIndex - 0.5) * 40
-            createLetterParticles(self, letter, x, wordY, true)
+        for i = 1, #self.currentWord do
+            if self.currentWord:sub(i, i) == letter then
+                local x = self.letterPositions[i]
+                if x then -- Ensure position exists
+                    createLetterParticles(self, letter, x, wordY - 5, true)
+                end
+            end
         end
 
         -- Check if won
@@ -651,7 +661,7 @@ function Game:guessLetter(letter)
         self.wrongGuesses = self.wrongGuesses + 1
         triggerScreenShake(self)
 
-        -- Create particle effect for wrong guess
+        -- Create particle effect for wrong guess at hangman position
         local headCenterX = self.screenWidth / 2 + 100
         local headCenterY = self.screenHeight / 2 + 100 - 150
         createLetterParticles(self, letter, headCenterX, headCenterY, false)

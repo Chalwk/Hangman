@@ -130,11 +130,13 @@ function love.keypressed(key)
         else
             love.event.quit()
         end
-    elseif key >= "a" and key <= "z" and gameState == "playing" and not game:isGameOver() then
-        game:guessLetter(key:upper())
     elseif key == "f11" then
         local fullscreen = love.window.getFullscreen()
         love.window.setFullscreen(not fullscreen)
+    elseif gameState == "playing" and not game:isGameOver() then
+        if key:match("[a-z]") and #key == 1 then
+            game:guessLetter(key:upper())
+        end
     end
 end
 
