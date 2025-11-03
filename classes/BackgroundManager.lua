@@ -92,7 +92,7 @@ function BackgroundManager:update(dt)
 end
 
 function BackgroundManager:drawMenuBackground(screenWidth, screenHeight, time)
-    -- Enhanced gradient background with pulsing effect
+    -- Gradient background with pulsing effect
     for y = 0, screenHeight, 2 do
         local progress = y / screenHeight
         local pulse = (math_sin(time * 2 + progress * 4) + 1) * 0.1
@@ -106,7 +106,7 @@ function BackgroundManager:drawMenuBackground(screenWidth, screenHeight, time)
         lg.rectangle("fill", 0, y, screenWidth, 2)
     end
 
-    -- Floating letters with enhanced visuals
+    -- Floating letters with visuals
     for _, particle in ipairs(self.menuParticles) do
         local pulse = (math_sin(particle.pulsePhase + time * particle.pulseSpeed) + 1) * 0.5
         local currentSize = particle.size * (0.7 + pulse * 0.3)
@@ -116,12 +116,12 @@ function BackgroundManager:drawMenuBackground(screenWidth, screenHeight, time)
         lg.print(particle.char, particle.x, particle.y, 0, currentSize / 18)
     end
 
-    -- Enhanced hangman silhouette in background
+    -- Hangman silhouette in background
     lg.setColor(0.4, 0.6, 0.8, 0.2 + self.pulseValue * 0.1)
     local centerX = screenWidth / 2
     local centerY = screenHeight / 2 - 50
 
-    -- Enhanced gallows with better proportions
+    -- Gallows with better proportions
     lg.setLineWidth(4)
     lg.line(centerX - 120, centerY + 180, centerX + 120, centerY + 180)
     lg.line(centerX, centerY + 180, centerX, centerY - 120)
@@ -148,7 +148,7 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
         lg.rectangle("fill", 0, y, screenWidth, 1.5)
     end
 
-    -- Enhanced ghost letters with varied behaviors
+    -- Ghost letters with varied behaviors
     for _, particle in ipairs(self.gameParticles) do
         local alpha = particle.isGhost and 0.15 or 0.4
         local sizeMod = particle.isGhost and 0.8 or 1.2

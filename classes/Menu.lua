@@ -104,7 +104,7 @@ local function createMenuButtons(self)
         }
     }
 
-    -- Enhanced help button
+    -- Help button
     self.helpButton = {
         text = "?",
         action = "help",
@@ -217,7 +217,7 @@ local function drawButton(self, button)
     lg.setColor(button.color[1], button.color[2], button.color[3], isHovered and 0.9 or 0.7)
     lg.rectangle("fill", button.x, button.y, button.width, button.height, 10)
 
-    -- Button border with enhanced styling
+    -- Button border
     lg.setColor(1, 1, 1, isHovered and 1 or 0.8)
     lg.setLineWidth(isHovered and 3 or 2)
     lg.rectangle("line", button.x, button.y, button.width, button.height, 10)
@@ -319,7 +319,7 @@ local function drawOptionsInterface(self)
 end
 
 local function drawHelpOverlay(self, screenWidth, screenHeight)
-    -- Enhanced overlay with blur effect
+    -- Overlay with blur effect
     for i = 1, 3 do
         local alpha = 0.9 - (i * 0.2)
         lg.setColor(0, 0, 0, alpha)
@@ -414,7 +414,7 @@ function Menu:update(dt, screenWidth, screenHeight)
         updateOptionsButtonPositions(self)
     end
 
-    -- Enhanced title animation
+    -- Title animation
     self.title.scale = self.title.scale + self.title.scaleDirection * self.title.scaleSpeed * dt
     self.title.glow = math_sin(self.time * 3) * 0.3 + 0.7
 
@@ -479,7 +479,7 @@ function Menu:draw(screenWidth, screenHeight, state)
             drawHelpOverlay(self, screenWidth, screenHeight)
         else
             drawMenuButtons(self)
-            -- Enhanced instructions
+            -- Instructions
             lg.setColor(0.9, 0.9, 0.9, 0.8)
             lg.setFont(self.smallFont)
             lg.printf("Guess the word before the hangman is complete!\nPress letter keys to guess. Good luck!",
@@ -492,7 +492,7 @@ function Menu:draw(screenWidth, screenHeight, state)
         drawOptionsInterface(self)
     end
 
-    -- Enhanced copyright
+    -- Copyright
     lg.setColor(1, 1, 1, 0.6)
     lg.setFont(self.smallFont)
     lg.printf("© 2025 Jericho Crosby – Hangman Word Adventure",

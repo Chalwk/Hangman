@@ -40,7 +40,7 @@ function Game.new()
     instance.screenShake = { intensity = 0, duration = 0, timer = 0, active = false }
     instance.time = 0
 
-    -- Enhanced Power-ups System
+    -- Power-ups System
     instance.powerUps = {
         reveal_vowel = {
             name = "Vowel Revealer",
@@ -278,7 +278,7 @@ local function drawGallows(self)
     local centerX = self.screenWidth / 2
     local baseY = self.screenHeight / 2 + 100
 
-    -- Enhanced gallows with wood texture effect
+    -- Gallows with wood texture effect
     lg.setColor(0.5, 0.3, 0.1)
     lg.setLineWidth(10)
 
@@ -403,7 +403,7 @@ local function drawWord(self)
     lg.setColor(1, 1, 1)
     lg.setFont(lg.newFont(36))
 
-    -- Draw the word with enhanced styling
+    -- Draw the word
     local wordDisplay = self.displayWord:gsub("_", "_")
     lg.printf(wordDisplay, 0, wordY, self.screenWidth, "center")
 
@@ -703,21 +703,21 @@ function Game:handleClick(x, y)
         return
     end
 
-    -- Check reset button (adjusted coordinates)
+    -- Check reset button
     if x >= self.screenWidth - 140 and x <= self.screenWidth - 20 and
         y >= 160 and y <= 200 then
         resetGame()
         return
     end
 
-    -- Check hint button (adjusted coordinates)
+    -- Check hint button
     if self.hintAvailable and x >= self.screenWidth - 140 and x <= self.screenWidth - 20 and
         y >= 210 and y <= 250 then
         useHint(self)
         return
     end
 
-    -- Check power-up buttons (adjusted coordinates)
+    -- Check power-up buttons
     checkPowerUpClicks(self, x, y)
 end
 
