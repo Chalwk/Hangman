@@ -9,14 +9,26 @@ local BackgroundManager = require("classes/BackgroundManager")
 local game, menu, backgroundManager
 local screenWidth, screenHeight
 local gameState = "menu"
+local stateTransition = { alpha = 0, duration = 0.5, timer = 0, active = false }
 
 local function updateScreenSize()
     screenWidth = love.graphics.getWidth()
     screenHeight = love.graphics.getHeight()
 end
 
+local function startStateTransition(newState)
+    stateTransition = {
+        alpha = 0,
+        duration = 0.3,
+        timer = 0,
+        active = true,
+        targetState = newState
+    }
+end
+
 function love.load()
-    love.window.setTitle("Hangman")
+    love.window.setTitle("Hangman - Word Adventure")
+    love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setLineStyle("smooth")
 
     game = Game.new()
@@ -31,6 +43,18 @@ end
 function love.update(dt)
     updateScreenSize()
 
+    -- Handle state transitions
+    if stateTransition.active then
+        stateTransition.timer = stateTransition.timer + dt
+        stateTransition.alpha = math.min(stateTransition.timer / stateTransition.duration, 1)
+
+        if stateTransition.timer >= stateTransition.duration then
+            gameState = stateTransition.targetState
+            stateTransition.active = false
+            stateTransition.alpha = 0
+        end
+    end
+
     if gameState == "menu" then
         menu:update(dt, screenWidth, screenHeight)
     elseif gameState == "playing" then
@@ -43,16 +67,25 @@ function love.update(dt)
 end
 
 function love.draw()
+    local time = love.timer.getTime()
+    -- Draw background based on state
     if gameState == "menu" or gameState == "options" then
-        backgroundManager:drawMenuBackground(screenWidth, screenHeight)
+        backgroundManager:drawMenuBackground(screenWidth, screenHeight, time)
     elseif gameState == "playing" then
-        backgroundManager:drawGameBackground(screenWidth, screenHeight)
+        backgroundManager:drawGameBackground(screenWidth, screenHeight, time)
     end
 
+    -- Draw game content
     if gameState == "menu" or gameState == "options" then
         menu:draw(screenWidth, screenHeight, gameState)
     elseif gameState == "playing" then
         game:draw()
+    end
+
+    -- Draw transition overlay
+    if stateTransition.active then
+        love.graphics.setColor(0, 0, 0, stateTransition.alpha)
+        love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
     end
 end
 
@@ -61,10 +94,10 @@ function love.mousepressed(x, y, button, istouch)
         if gameState == "menu" then
             local action = menu:handleClick(x, y, "menu")
             if action == "start" then
-                gameState = "playing"
+                startStateTransition("playing")
                 game:startNewGame(menu:getDifficulty(), menu:getCategory())
             elseif action == "options" then
-                gameState = "options"
+                startStateTransition("options")
             elseif action == "quit" then
                 love.event.quit()
             end
@@ -72,7 +105,7 @@ function love.mousepressed(x, y, button, istouch)
             local action = menu:handleClick(x, y, "options")
             if not action then return end
             if action == "back" then
-                gameState = "menu"
+                startStateTransition("menu")
             elseif action:sub(1, 4) == "diff" then
                 local difficulty = action:sub(6)
                 menu:setDifficulty(difficulty)
@@ -82,7 +115,7 @@ function love.mousepressed(x, y, button, istouch)
             end
         elseif gameState == "playing" then
             if game:isGameOver() then
-                gameState = "menu"
+                startStateTransition("menu")
             else
                 game:handleClick(x, y)
             end
@@ -93,12 +126,15 @@ end
 function love.keypressed(key)
     if key == "escape" then
         if gameState == "playing" or gameState == "options" then
-            gameState = "menu"
+            startStateTransition("menu")
         else
             love.event.quit()
         end
     elseif key >= "a" and key <= "z" and gameState == "playing" and not game:isGameOver() then
         game:guessLetter(key:upper())
+    elseif key == "f11" then
+        local fullscreen = love.window.getFullscreen()
+        love.window.setFullscreen(not fullscreen)
     end
 end
 
