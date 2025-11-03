@@ -224,7 +224,7 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
         lg.rectangle("fill", 0, y, screenWidth, 1.5)
     end
 
-    -- Draw floating gallows (darker for game screen)
+    -- Draw floating gallows
     for _, gallows in ipairs(self.floatingGallows) do
         local pulse = (math_sin(gallows.pulsePhase + time * gallows.pulseSpeed) + 1) * 0.5
         local currentAlpha = gallows.alpha * 0.7 * (0.5 + pulse * 0.5)
@@ -237,7 +237,7 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
         lg.setColor(0.2, 0.3, 0.4, currentAlpha)
         lg.setLineWidth(2)
 
-        -- Draw simple gallows with noose
+        -- Draw gallows with noose
         lg.line(-30, 30, 30, 30)      -- Base
         lg.line(0, 30, 0, -30)        -- Vertical pole
         lg.line(0, -30, 25, -30)      -- Horizontal beam
@@ -248,7 +248,7 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
         lg.pop()
     end
 
-    -- Draw floating letters (more atmospheric for game screen)
+    -- Draw floating letters
     for _, letter in ipairs(self.floatingLetters) do
         local bobOffset = math_sin(time * letter.bobSpeed) * letter.bobAmount
         local currentY = letter.y + bobOffset
@@ -289,7 +289,7 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
             lg.push()
             lg.translate(x, y)
 
-            -- Simple noose design
+            -- Draw noose
             lg.setLineWidth(1)
             lg.circle("line", 0, 0, 8)
             lg.line(-5, -5, 5, 5)
