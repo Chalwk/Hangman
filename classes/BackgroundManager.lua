@@ -5,7 +5,6 @@
 local ipairs = ipairs
 local math_pi = math.pi
 local math_sin = math.sin
-local math_cos = math.cos
 local string_char = string.char
 local math_random = math.random
 local table_insert = table.insert
@@ -14,53 +13,66 @@ local lg = love.graphics
 local BackgroundManager = {}
 BackgroundManager.__index = BackgroundManager
 
-local function initMenuParticles(self)
-    self.menuParticles = {}
-    for _ = 1, 60 do
-        table_insert(self.menuParticles, {
+local function initFloatingLetters(self)
+    self.floatingLetters = {}
+    local letterCount = 40
+
+    for _ = 1, letterCount do
+        table_insert(self.floatingLetters, {
             x = math_random() * 1000,
             y = math_random() * 1000,
-            size = math_random(2, 8),
-            speed = math_random(15, 80),
-            angle = math_random() * math_pi * 2,
-            pulseSpeed = math_random(0.5, 2),
-            pulsePhase = math_random() * math_pi * 2,
+            size = math_random(16, 24),
+            speedX = math_random(-20, 20),
+            speedY = math_random(-20, 20),
+            rotation = math_random() * math_pi * 2,
+            rotationSpeed = (math_random() - 0.5) * 2,
+            bobSpeed = math_random(1, 3),
+            bobAmount = math_random(2, 8),
             char = string_char(math_random(65, 90)),
+            alpha = math_random(0.3, 0.7),
+            isRevealed = math_random() > 0.7, -- Some letters start revealed
+            isGhost = math_random() > 0.8,    -- Some are ghost letters
             color = {
-                math_random(0.6, 0.9),
-                math_random(0.7, 1.0),
+                math_random(0.7, 0.9),
+                math_random(0.7, 0.9),
                 math_random(0.8, 1.0)
             }
         })
     end
 end
 
-local function initGameParticles(self)
-    self.gameParticles = {}
-    for _ = 1, 35 do
-        table_insert(self.gameParticles, {
+local function initFloatingGallows(self)
+    self.floatingGallows = {}
+    local gallowsCount = 8
+
+    for _ = 1, gallowsCount do
+        table_insert(self.floatingGallows, {
             x = math_random() * 1000,
             y = math_random() * 1000,
-            size = math_random(1, 5),
-            speed = math_random(10, 50),
-            angle = math_random() * math_pi * 2,
-            char = string_char(math_random(65, 90)),
-            isGhost = math_random() > 0.7,
-            color = math_random() > 0.5 and
-                { 0.3, 0.5, 0.8 } or
-                { 0.5, 0.7, 1.0 }
+            size = math_random(0.3, 0.8),
+            speedX = math_random(-15, 15),
+            speedY = math_random(-15, 15),
+            rotation = math_random() * math_pi * 2,
+            rotationSpeed = (math_random() - 0.5) * 1,
+            bobSpeed = math_random(0.5, 2),
+            bobAmount = math_random(1, 4),
+            alpha = math_random(0.1, 0.3),
+            pulseSpeed = math_random(0.5, 1.5),
+            pulsePhase = math_random() * math_pi * 2
         })
     end
 end
 
 function BackgroundManager.new()
     local instance = setmetatable({}, BackgroundManager)
-    instance.menuParticles = {}
-    instance.gameParticles = {}
+    instance.floatingLetters = {}
+    instance.floatingGallows = {}
     instance.time = 0
     instance.pulseValue = 0
-    initMenuParticles(instance)
-    initGameParticles(instance)
+
+    initFloatingLetters(instance)
+    initFloatingGallows(instance)
+
     return instance
 end
 
@@ -68,26 +80,41 @@ function BackgroundManager:update(dt)
     self.time = self.time + dt
     self.pulseValue = math_sin(self.time * 2) * 0.5 + 0.5
 
-    -- Update menu particles
-    for _, particle in ipairs(self.menuParticles) do
-        particle.x = particle.x + math_cos(particle.angle) * particle.speed * dt
-        particle.y = particle.y + math_sin(particle.angle) * particle.speed * dt
+    -- Update floating letters
+    for _, letter in ipairs(self.floatingLetters) do
+        letter.x = letter.x + letter.speedX * dt
+        letter.y = letter.y + letter.speedY * dt
 
-        if particle.x < -50 then particle.x = 1050 end
-        if particle.x > 1050 then particle.x = -50 end
-        if particle.y < -50 then particle.y = 1050 end
-        if particle.y > 1050 then particle.y = -50 end
+        -- Bobbing motion
+        letter.y = letter.y + math_sin(self.time * letter.bobSpeed) * letter.bobAmount * dt
+        letter.rotation = letter.rotation + letter.rotationSpeed * dt
+
+        -- Wrap around screen edges
+        if letter.x < -50 then letter.x = 1050 end
+        if letter.x > 1050 then letter.x = -50 end
+        if letter.y < -50 then letter.y = 1050 end
+        if letter.y > 1050 then letter.y = -50 end
+
+        -- Occasionally change revealed state
+        if math_random() < 0.01 then
+            letter.isRevealed = not letter.isRevealed
+        end
     end
 
-    -- Update game particles
-    for _, particle in ipairs(self.gameParticles) do
-        particle.x = particle.x + math_cos(particle.angle) * particle.speed * dt
-        particle.y = particle.y + math_sin(particle.angle) * particle.speed * dt
+    -- Update floating gallows
+    for _, gallows in ipairs(self.floatingGallows) do
+        gallows.x = gallows.x + gallows.speedX * dt
+        gallows.y = gallows.y + gallows.speedY * dt
 
-        if particle.x < -50 then particle.x = 1050 end
-        if particle.x > 1050 then particle.x = -50 end
-        if particle.y < -50 then particle.y = 1050 end
-        if particle.y > 1050 then particle.y = -50 end
+        -- Bobbing motion
+        gallows.y = gallows.y + math_sin(self.time * gallows.bobSpeed) * gallows.bobAmount * dt
+        gallows.rotation = gallows.rotation + gallows.rotationSpeed * dt
+
+        -- Wrap around screen edges
+        if gallows.x < -100 then gallows.x = 1100 end
+        if gallows.x > 1100 then gallows.x = -100 end
+        if gallows.y < -100 then gallows.y = 1100 end
+        if gallows.y > 1100 then gallows.y = -100 end
     end
 end
 
@@ -106,30 +133,79 @@ function BackgroundManager:drawMenuBackground(screenWidth, screenHeight, time)
         lg.rectangle("fill", 0, y, screenWidth, 2)
     end
 
-    -- Floating letters with visuals
-    for _, particle in ipairs(self.menuParticles) do
-        local pulse = (math_sin(particle.pulsePhase + time * particle.pulseSpeed) + 1) * 0.5
-        local currentSize = particle.size * (0.7 + pulse * 0.3)
-        local alpha = 0.3 + pulse * 0.4
+    -- Draw floating gallows
+    for _, gallows in ipairs(self.floatingGallows) do
+        local pulse = (math_sin(gallows.pulsePhase + time * gallows.pulseSpeed) + 1) * 0.5
+        local currentAlpha = gallows.alpha * (0.7 + pulse * 0.3)
 
-        lg.setColor(particle.color[1], particle.color[2], particle.color[3], alpha)
-        lg.print(particle.char, particle.x, particle.y, 0, currentSize / 18)
+        lg.push()
+        lg.translate(gallows.x, gallows.y)
+        lg.rotate(gallows.rotation)
+        lg.scale(gallows.size, gallows.size)
+
+        lg.setColor(0.4, 0.6, 0.8, currentAlpha)
+        lg.setLineWidth(3)
+
+        -- Draw simple gallows
+        lg.line(-40, 40, 40, 40)  -- Base
+        lg.line(0, 40, 0, -40)    -- Vertical pole
+        lg.line(0, -40, 30, -40)  -- Horizontal beam
+        lg.line(30, -40, 30, -30) -- Rope
+
+        lg.setLineWidth(1)
+        lg.pop()
     end
 
-    -- Hangman silhouette in background
-    lg.setColor(0.4, 0.6, 0.8, 0.2 + self.pulseValue * 0.1)
+    -- Draw floating letters
+    for _, letter in ipairs(self.floatingLetters) do
+        local bobOffset = math_sin(time * letter.bobSpeed) * letter.bobAmount
+        local currentY = letter.y + bobOffset
+        local currentAlpha = letter.alpha
+
+        if letter.isGhost then
+            currentAlpha = currentAlpha * (0.3 + math_sin(time * 2) * 0.2)
+        end
+
+        lg.push()
+        lg.translate(letter.x, currentY)
+        lg.rotate(letter.rotation)
+
+        if letter.isRevealed then
+            -- Revealed letters (like correct guesses)
+            lg.setColor(0.3, 0.9, 0.4, currentAlpha)
+        else
+            -- Hidden letters (like unguessed letters)
+            lg.setColor(letter.color[1], letter.color[2], letter.color[3], currentAlpha)
+        end
+
+        lg.print(letter.char, 0, 0, 0, letter.size / 18)
+        lg.pop()
+    end
+
+    -- Main gallows silhouette in center background
+    lg.setColor(0.4, 0.6, 0.8, 0.15 + self.pulseValue * 0.1)
     local centerX = screenWidth / 2
-    local centerY = screenHeight / 2 - 50
+    local centerY = screenHeight / 2 - 5
 
-    -- Gallows with better proportions
-    lg.setLineWidth(4)
-    lg.line(centerX - 120, centerY + 180, centerX + 120, centerY + 180)
-    lg.line(centerX, centerY + 180, centerX, centerY - 120)
-    lg.line(centerX, centerY - 120, centerX + 100, centerY - 120)
-    lg.line(centerX + 100, centerY - 120, centerX + 100, centerY - 90)
+    -- Larger, more detailed gallows
+    lg.setLineWidth(6)
 
-    -- Head with pulsing effect
-    lg.circle("line", centerX + 100, centerY - 70, 25)
+    -- Base
+    lg.line(centerX - 150, centerY + 200, centerX + 150, centerY + 200)
+
+    -- Vertical pole
+    lg.line(centerX, centerY + 200, centerX, centerY - 100)
+
+    -- Horizontal beam
+    lg.line(centerX, centerY - 100, centerX + 120, centerY - 100)
+
+    -- Support beam
+    lg.line(centerX, centerY - 50, centerX + 60, centerY - 100)
+
+    -- Rope
+    lg.setLineWidth(3)
+    lg.line(centerX + 120, centerY - 100, centerX + 120, centerY - 70)
+
     lg.setLineWidth(1)
 end
 
@@ -148,26 +224,79 @@ function BackgroundManager:drawGameBackground(screenWidth, screenHeight, time)
         lg.rectangle("fill", 0, y, screenWidth, 1.5)
     end
 
-    -- Ghost letters with varied behaviors
-    for _, particle in ipairs(self.gameParticles) do
-        local alpha = particle.isGhost and 0.15 or 0.4
-        local sizeMod = particle.isGhost and 0.8 or 1.2
-        local pulse = math_sin(time * 2 + particle.x * 0.01) * 0.2 + 0.8
+    -- Draw floating gallows (darker for game screen)
+    for _, gallows in ipairs(self.floatingGallows) do
+        local pulse = (math_sin(gallows.pulsePhase + time * gallows.pulseSpeed) + 1) * 0.5
+        local currentAlpha = gallows.alpha * 0.7 * (0.5 + pulse * 0.5)
 
-        lg.setColor(particle.color[1], particle.color[2], particle.color[3], alpha * pulse)
-        lg.print(particle.char, particle.x, particle.y, time * 0.5, (particle.size * sizeMod) / 12)
+        lg.push()
+        lg.translate(gallows.x, gallows.y)
+        lg.rotate(gallows.rotation)
+        lg.scale(gallows.size, gallows.size)
+
+        lg.setColor(0.2, 0.3, 0.4, currentAlpha)
+        lg.setLineWidth(2)
+
+        -- Draw simple gallows with noose
+        lg.line(-30, 30, 30, 30)      -- Base
+        lg.line(0, 30, 0, -30)        -- Vertical pole
+        lg.line(0, -30, 25, -30)      -- Horizontal beam
+        lg.line(25, -30, 25, -25)     -- Rope
+        lg.circle("line", 25, -20, 5) -- Noose
+
+        lg.setLineWidth(1)
+        lg.pop()
     end
 
-    -- Subtle noose pattern with animation
+    -- Draw floating letters (more atmospheric for game screen)
+    for _, letter in ipairs(self.floatingLetters) do
+        local bobOffset = math_sin(time * letter.bobSpeed) * letter.bobAmount
+        local currentY = letter.y + bobOffset
+        local pulse = math_sin(time * 2 + letter.x * 0.01) * 0.3 + 0.7
+        local currentAlpha = letter.alpha * pulse * 0.8
+
+        if letter.isGhost then
+            currentAlpha = currentAlpha * 0.4
+        end
+
+        lg.push()
+        lg.translate(letter.x, currentY)
+        lg.rotate(letter.rotation + time * 0.5)
+
+        if letter.isRevealed then
+            -- Bright revealed letters
+            lg.setColor(0.2, 0.8, 0.3, currentAlpha)
+        else
+            -- Darker, more mysterious unguessed letters
+            if letter.isGhost then
+                lg.setColor(0.6, 0.7, 1.0, currentAlpha)
+            else
+                lg.setColor(0.3, 0.5, 0.8, currentAlpha)
+            end
+        end
+
+        lg.print(letter.char, 0, 0, time * 0.3, letter.size / 15)
+        lg.pop()
+    end
+
+    -- Subtle grid pattern with hanging nooses
     lg.setColor(0.15, 0.25, 0.35, 0.08)
-    local gridSize = 70
+    local gridSize = 80
     local offset = math_sin(time * 0.3) * 5
 
     for x = -offset, screenWidth + offset, gridSize do
         for y = -offset, screenHeight + offset, gridSize do
-            lg.circle("line", x, y, 10)
-            lg.line(x - 6, y - 6, x + 6, y + 6)
-            lg.line(x + 6, y - 6, x - 6, y + 6)
+            lg.push()
+            lg.translate(x, y)
+
+            -- Simple noose design
+            lg.setLineWidth(1)
+            lg.circle("line", 0, 0, 8)
+            lg.line(-5, -5, 5, 5)
+            lg.line(5, -5, -5, 5)
+            lg.line(0, -8, 0, -12)
+
+            lg.pop()
         end
     end
 end

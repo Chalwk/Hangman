@@ -370,13 +370,68 @@ local function drawHelpOverlay(self, screenWidth, screenHeight)
     lg.setLineWidth(1)
 end
 
+local function drawHangingManTitle(self, screenWidth, screenHeight)
+    local centerX = screenWidth / 2
+    local centerY = screenHeight / 5
+    local swing = math_sin(self.time * 2) * 0.05 -- Gentle swinging motion
+
+    -- Adjust scale factor
+    local titleScale = 1.6
+    local scaledWidth = screenWidth / titleScale
+
+    lg.push()
+    lg.translate(centerX, centerY)
+    lg.rotate(self.title.rotation)
+    lg.scale(titleScale, titleScale)
+
+    -- Title shadow
+    lg.setColor(0, 0, 0, 0.5)
+    lg.printf(self.title.text, -scaledWidth / 2 + 4, -self.titleFont:getHeight() / 2 + 4, scaledWidth, "center")
+
+    -- Title main
+    lg.setColor(0.9, 0.2, 0.2, self.title.glow)
+    lg.printf(self.title.text, -scaledWidth / 2, -self.titleFont:getHeight() / 2, scaledWidth, "center")
+
+    -- Hangman positioning
+    local textHeight = self.titleFont:getHeight() * titleScale
+    local manY = textHeight / 2 - 50
+
+    lg.push()
+    lg.translate(0, manY)
+    lg.rotate(swing)
+
+    local ropeSwing = math_sin(self.time * 3) * 8
+    lg.setColor(1, 1, 1, 0.9)
+    lg.setLineWidth(2)
+    lg.line(ropeSwing, -25, ropeSwing, -10)
+
+    lg.setColor(1, 1, 1, 0.9)
+    lg.setLineWidth(2)
+
+    local manX = ropeSwing
+    lg.circle("line", manX, 0, 6)
+    lg.line(manX, 6, manX, 22)
+
+    local armSwing = math_sin(self.time * 4) * 3
+    lg.line(manX, 10, manX - 8 + armSwing, 17)
+    lg.line(manX, 10, manX + 8 + armSwing, 17)
+
+    local legSwing = math_sin(self.time * 4 + 1) * 4
+    lg.line(manX, 22, manX - 6 + legSwing, 34)
+    lg.line(manX, 22, manX + 6 + legSwing, 34)
+
+    lg.setLineWidth(1)
+    lg.pop()
+    lg.pop()
+end
+
 function Menu.new()
     local instance = setmetatable({}, Menu)
 
     instance.screenWidth = 800
     instance.screenHeight = 600
     instance.difficulty = "medium"
-    instance.category = "general"
+    instance.category = "cale"
     instance.title = {
         text = "HANGMAN",
         scale = 1,
@@ -456,23 +511,8 @@ end
 function Menu:draw(screenWidth, screenHeight, state)
     self.state = state
 
-    -- Draw animated title with glow effect
-    lg.setColor(0.9, 0.2, 0.2, self.title.glow)
-    lg.setFont(self.titleFont)
-
-    lg.push()
-    lg.translate(screenWidth / 2, screenHeight / 5)
-    lg.rotate(self.title.rotation)
-    lg.scale(self.title.scale, self.title.scale)
-
-    -- Title shadow
-    lg.setColor(0, 0, 0, 0.5)
-    lg.printf(self.title.text, -screenWidth / 2 + 4, -self.titleFont:getHeight() / 2 + 4, screenWidth, "center")
-
-    -- Title main
-    lg.setColor(0.9, 0.2, 0.2, self.title.glow)
-    lg.printf(self.title.text, -screenWidth / 2, -self.titleFont:getHeight() / 2, screenWidth, "center")
-    lg.pop()
+    -- Draw the hanging man title
+    drawHangingManTitle(self, screenWidth, screenHeight)
 
     if state == "menu" then
         if self.showHelp then
