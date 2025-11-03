@@ -36,9 +36,9 @@ function Game.new()
     instance.vowels = { "A", "E", "I", "O", "U" }
     instance.guessedLetters = {}
     instance.wrongGuesses = 0
+    instance.revealTimer = 0
     instance.maxWrongGuesses = 6
     instance.hintAvailable = true
-    instance.revealTimer = 0
     instance.revealLetter = nil
     instance.animations = {}
     instance.powerUpParticles = {}
@@ -89,8 +89,9 @@ local function isLetterGuessed(self, letter)
     return false
 end
 
+local PARTICLE_COLORS = { { 0.3, 0.9, 0.4 }, { 0.9, 0.3, 0.4 } }
 local function createLetterParticles(self, letter, x, y, correct)
-    local color = correct and { 0.3, 0.9, 0.4 } or { 0.9, 0.3, 0.4 }
+    local color = correct and PARTICLE_COLORS[1] or PARTICLE_COLORS[2]
     for _ = 1, 15 do
         table_insert(self.powerUpParticles, {
             x = x,
